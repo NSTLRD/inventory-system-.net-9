@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "WVqerzDKrdWlRRetPWTUMxFBpnMQy4VGSgzUXV0lUM0=",
+  "Source": "ms-products",
+  "BasePath": "_content/ms-products",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

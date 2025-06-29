@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "VgT2w1PAmGNSshwsaMz+YIDqjtoKorLCjO1WMZ2mazo=",
+  "Source": "ms-Inventory",
+  "BasePath": "_content/ms-Inventory",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
