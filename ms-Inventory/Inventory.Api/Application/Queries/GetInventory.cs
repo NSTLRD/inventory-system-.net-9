@@ -1,8 +1,16 @@
+using System;
 using MediatR;
-using Inventory.Api.Common.DTOs;
-using System.Collections.Generic;
+using Inventory.Api.Application.DTOs;
 
 namespace Inventory.Api.Application.Queries
 {
-    public record GetInventory() : IRequest<IEnumerable<InventoryDto>>;
+    public class GetInventory : IRequest<InventoryDto>
+    {
+        public Guid Id { get; }
+
+        public GetInventory(Guid id)
+        {
+            Id = id;
+        }
+    }
 }

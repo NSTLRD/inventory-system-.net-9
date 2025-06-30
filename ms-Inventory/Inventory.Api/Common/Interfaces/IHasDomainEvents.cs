@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MediatR;
 
-namespace Inventory.Api.Domain.Interfaces
+namespace Inventory.Api.Common.Interfaces
 {
     public interface IHasDomainEvents
     {

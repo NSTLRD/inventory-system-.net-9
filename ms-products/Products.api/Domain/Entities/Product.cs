@@ -37,10 +37,10 @@ namespace Products.Api.Domain.Entities
             History = new PriceHistory();
         }
 
-        // Método para actualizar las propiedades de forma segura
+       
         public void Update(string name, string description, string category, decimal price, string sku)
         {
-            // Si el precio ha cambiado, añadirlo al historial
+            
             if (Price != price)
             {
                 History.AddPriceChange(Price, price);

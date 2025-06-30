@@ -3,7 +3,6 @@ using Inventory.Api.Application.Events.Common;
 
 namespace Inventory.Api.Application.Events
 {
-    // He cambiado el nombre de la clase para evitar cualquier conflicto
     public class ProductCreatedEvent : IntegrationEvent
     {
         public Guid ProductId { get; }

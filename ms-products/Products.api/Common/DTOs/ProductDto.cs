@@ -11,11 +11,17 @@ namespace Products.Api.Common.DTOs
         public string Category { get; set; }
         public decimal Price { get; set; }
         public string Sku { get; set; }
+        
+        public decimal? ConvertedPrice { get; set; }
+        public string? Currency { get; set; }
+        public decimal? ExchangeRate { get; set; }
+        
         public IEnumerable<(decimal OldPrice, decimal NewPrice, DateTime At)> PriceHistory { get; set; }
 
-        // Constructor con todos los parámetros
+      
         public ProductDto(Guid id, string name, string description, string category, decimal price, string sku, 
-            IEnumerable<(decimal OldPrice, decimal NewPrice, DateTime At)> priceHistory)
+            IEnumerable<(decimal OldPrice, decimal NewPrice, DateTime At)> priceHistory,
+            decimal? convertedPrice = null, string? currency = null, decimal? exchangeRate = null)
         {
             Id = id;
             Name = name;
@@ -24,9 +30,11 @@ namespace Products.Api.Common.DTOs
             Price = price;
             Sku = sku;
             PriceHistory = priceHistory;
+            ConvertedPrice = convertedPrice;
+            Currency = currency;
+            ExchangeRate = exchangeRate;
         }
 
-        // Constructor sin parámetros para serialización/deserialización
         public ProductDto()
         {
             Name = string.Empty;

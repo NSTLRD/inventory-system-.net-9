@@ -1,11 +1,11 @@
-// Inventory.Api/Application/Events/IIntegrationEventHandler.cs
+
 using System.Threading.Tasks;
-using Inventory.Api.Application.Events.Common; // <-- AÑADIR
+using Inventory.Api.Application.Events.Common;
 
 namespace Inventory.Api.Application.Events
 {
     /// <summary>
-    /// Handler para un IntegrationEvent específico.
+    /// Handler para un IntegrationEvent.
     /// </summary>
     public interface IIntegrationEventHandler<in TEvent>
         where TEvent : IntegrationEvent

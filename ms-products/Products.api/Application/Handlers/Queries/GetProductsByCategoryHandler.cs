@@ -25,7 +25,6 @@ namespace Products.Api.Application.Handlers.Queries
 
         public async Task<IEnumerable<Product>> Handle(GetProductsByCategory request, CancellationToken ct)
         {
-            // CORRECCIÓN: Usar el método FindAsync que sí existe
             return await _repo.FindAsync(p => p.Category == request.Category);
         }
     }

@@ -13,7 +13,7 @@ namespace Products.Api.Application.Queries
             Id = id;
         }
 
-        // Constructor sin parámetros para deserialización
+
         public GetProductById() { }
     }
 }

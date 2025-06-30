@@ -12,7 +12,6 @@ namespace Inventory.Api.Application.Events
             ProductId = productId;
         }
 
-        // Constructor sin parámetros para deserialización
         public ProductDeletedEvent() { }
     }
 }

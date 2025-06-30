@@ -11,7 +11,7 @@ namespace Products.Api.Common.Interfaces
         Task<IReadOnlyList<T>> GetAllAsync();
         Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate);
         Task AddAsync(T entity);
-        void UpdateAsync(T entity); // EF Core tracks changes, so this can be void
-        void DeleteAsync(T entity); // EF Core tracks changes, so this can be void
+        void UpdateAsync(T entity);
+        void DeleteAsync(T entity);
     }
 }

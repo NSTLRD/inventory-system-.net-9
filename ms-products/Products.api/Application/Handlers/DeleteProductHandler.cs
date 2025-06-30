@@ -1,4 +1,4 @@
-// Products.api/Application/Handlers/DeleteProductHandler.cs
+
 using MediatR;
 using Products.Api.Application.Commands;
 using Products.Api.Common.Interfaces;

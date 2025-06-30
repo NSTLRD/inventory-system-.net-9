@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Filter to include only controller tests -->
+  <RunConfiguration>
+    <TestCaseFilter>FullyQualifiedName~Controllers</TestCaseFilter>
+  </RunConfiguration>
+</RunSettings>

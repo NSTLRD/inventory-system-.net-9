@@ -8,23 +8,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Products.Api.Common.Interfaces;
-using Products.Api.Infrastruture.Data; // <-- CORRECCIÓN: Usar "Infrastruture"
-using Products.Api.Infrastruture.Repositories; // <-- CORRECCIÓN: Usar "Infrastruture"
+using Products.Api.Infrastruture.Data;
+using Products.Api.Infrastruture.Repositories;
 using Products.Api.Middleware;
 using Serilog;
 using Products.Api.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Serilog
+//Serilog
 builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 
-// 2) EF + DbContext
+// EF + DbContext
 builder.Services.AddDbContext<ProductDbContext>(opts =>
     opts.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
             
-// 3) Identity (UserManager, RoleManager, SignInManager, stores, etc.)
+//Identity (UserManager, RoleManager, SignInManager, stores)
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(opts =>
     {
         opts.Password.RequireDigit           = true;
@@ -34,7 +34,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(opts =>
     .AddEntityFrameworkStores<ProductDbContext>()
     .AddDefaultTokenProviders();
 
-// 4) Authentication & Authorization
+// Authentication & Authorization
 builder.Services
     .AddAuthentication(options =>
     {
@@ -58,10 +58,10 @@ builder.Services
             ValidateLifetime = true
         };
     })
-    .Services   // note: we chain back into IServiceCollection
-    .AddAuthorization();  // <— this was missing
+    .Services   
+    .AddAuthorization();
 
-// 5) Application services (UoW, repos, MediatR, validators, Kafka, cache…)
+//Application services (UoW, repos, MediatR, validators, Kafka, cache)
 builder.Services.AddScoped<IUnitOfWork, ProductDbContext>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>));
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
@@ -69,7 +69,11 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddSingleton<KafkaProducer>();
 builder.Services.AddMemoryCache();
 
-// 6) Swagger + JWT support
+//HttpClient
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<Products.Api.Common.Interfaces.ICurrencyConversionService, Products.Api.Infrastructure.Services.CurrencyConversionService>();
+
+//Swagger + JWT support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -98,14 +102,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 7) MVC + validation
+//MVC + validation
 builder.Services.AddControllers().AddFluentValidation();
 
 // ──────────────────────────────────────────────────────────────────────────
 
 var app = builder.Build();
 
-// 8) Middleware pipeline
+//Middleware pipeline
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
@@ -113,7 +117,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Products API v1");
-    c.RoutePrefix = "swagger";  // so you browse to /swagger
+    c.RoutePrefix = "swagger";
 });
 
 app.UseAuthentication();
@@ -121,9 +125,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// 9) Apply EF migrations at startup
+//Apply EF migrations at startup
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<ProductDbContext>();
 db.Database.Migrate();
+
+//Ensure Kafka topic is created at startup
+var kafkaProducer = scope.ServiceProvider.GetRequiredService<KafkaProducer>();
 
 app.Run();

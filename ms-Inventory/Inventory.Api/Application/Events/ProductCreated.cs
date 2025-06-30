@@ -1,5 +1,5 @@
 using System;
-using Inventory.Api.Application.Events.Common; // <-- CORRECCIÓN: Añadir using
+using Inventory.Api.Application.Events.Common;
 
 namespace Inventory.Api.Application.Events
 {

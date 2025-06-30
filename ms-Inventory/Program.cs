@@ -12,38 +12,37 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Application.Events;
 using Inventory.Api.Application.Commands.Handlers;
-
+using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Infrastructure.Configuration;
 using Inventory.Api.Infrastructure.Data;
 using Inventory.Api.Infrastructure.Messaging;
 using Inventory.Api.Infrastructure.Repositories;
 using Inventory.Api.Middleware;
-using Inventory.Api.Application.Handlers;
-using Inventory.Api.Application.Common.Interfaces;
-
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1) Serilog
+//Serilog
 builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 
-// 2) EF Core + UoW + repos genéricas
+//EF Core + UoW + repos genéricas
+//DbContext + repositorios
 builder.Services.AddDbContext<InventoryDbContext>(opts =>
     opts.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
-
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
-builder.Services.AddMediatR(typeof(AdjustInventoryHandler).Assembly);
-
-
 builder.Services.AddScoped<IUnitOfWork, InventoryDbContext>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(EfRepository<>));
 
+//MediatR
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(AdjustInventoryHandler).Assembly)
+);
 
-// 3) Identity + JWT
+
+
+//Identity + JWT
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<InventoryDbContext>()
     .AddDefaultTokenProviders();
@@ -66,29 +65,26 @@ builder.Services
   });
 builder.Services.AddAuthorization();
 
-// 4) MediatR
-builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(ProductCreatedIntegrationHandler).Assembly);
-});
+
 builder.Services.AddMemoryCache();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// 5) KafkaSettings
-builder.Services.Configure<KafkaSettings>(
+//KafkaSettings
+builder.Services.Configure<Inventory.Api.Infrastructure.Configuration.KafkaSettings>(
     builder.Configuration.GetSection("KafkaSettings"));
 
-// 6) Bus interno + handler + consumer
-// Producer, bus interno y consumer
-// builder.Services.AddSingleton<KafkaEventBus>();                  
-builder.Services.AddSingleton<IEventBus, InMemoryEventBus>();      // bus in-mem
-builder.Services.AddHostedService<KafkaConsumer>();               // único consumer
+// Bus interno + handler + consumer
+// Producer, bus interno y consumer              
+builder.Services.AddSingleton<Inventory.Api.Common.Interfaces.IEventBus, 
+    Inventory.Api.Infrastructure.Messaging.KafkaEventBus>();      
+builder.Services.AddHostedService<KafkaConsumer>();               
 
 // Integration Handlers
 builder.Services.AddScoped<IIntegrationEventHandler<ProductCreatedEvent>, ProductCreatedIntegrationHandler>();
 builder.Services.AddScoped<IIntegrationEventHandler<ProductUpdatedEvent>, ProductUpdatedIntegrationHandler>();
 
 
-// 7) MVC & OpenAPI
+//MVC & OpenAPI
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -116,6 +112,21 @@ builder.Services.AddSwaggerGen(c =>
   });
 });
 
+// Suscribir el handler al bus interno
+builder.Services.AddScoped<Inventory.Api.Common.Interfaces.IEventHandler<ProductCreatedEvent>, 
+    IntegrationEventHandlerAdapter<ProductCreatedEvent>>();
+
+builder.Services.AddScoped<Inventory.Api.Common.Interfaces.IEventHandler<ProductUpdatedEvent>, 
+    IntegrationEventHandlerAdapter<ProductUpdatedEvent>>();
+
+// Registrar los adaptadores
+builder.Services.AddScoped<IntegrationEventHandlerAdapter<ProductCreatedEvent>>(sp => 
+    new IntegrationEventHandlerAdapter<ProductCreatedEvent>(
+        sp.GetRequiredService<IIntegrationEventHandler<ProductCreatedEvent>>()));
+
+builder.Services.AddScoped<IntegrationEventHandlerAdapter<ProductUpdatedEvent>>(sp => 
+    new IntegrationEventHandlerAdapter<ProductUpdatedEvent>(
+        sp.GetRequiredService<IIntegrationEventHandler<ProductUpdatedEvent>>()));
 
 
 var app = builder.Build();
@@ -126,10 +137,11 @@ using(var scope = app.Services.CreateScope()) {
   db.Database.Migrate();
 }
 
-// Suscribir el handler al bus interno
-var bus = app.Services.GetRequiredService<IEventBus>();
-bus.Subscribe<ProductCreatedEvent, ProductCreatedIntegrationHandler>();
-bus.Subscribe<ProductUpdatedEvent, ProductUpdatedIntegrationHandler>();
+
+
+var bus = app.Services.GetRequiredService<Inventory.Api.Common.Interfaces.IEventBus>();
+bus.Subscribe<ProductCreatedEvent, IntegrationEventHandlerAdapter<ProductCreatedEvent>>();
+bus.Subscribe<ProductUpdatedEvent, IntegrationEventHandlerAdapter<ProductUpdatedEvent>>();
 
 // Pipeline
 app.UseSerilogRequestLogging();

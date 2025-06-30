@@ -1,33 +1,38 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Inventory.Api.Application.Queries;
-using Inventory.Api.Common.DTOs;
-using Inventory.Api.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Inventory.Api.Common.Interfaces;
+using Inventory.Api.Application.DTOs;
 using Inventory.Api.Domain.Entities;
 
-namespace Inventory.Api.Application.Handlers.Queries
+namespace Inventory.Api.Application.Queries.Handlers
 {
-    public class GetInventoryHandler : IRequestHandler<GetInventory, IEnumerable<InventoryDto>>
+    public class GetInventoryHandler : IRequestHandler<GetInventory, InventoryDto>
     {
-        private readonly IGenericRepository<InventoryItem> _repo;
-
-        public GetInventoryHandler(IGenericRepository<InventoryItem> repo)
-            => _repo = repo;
-
-        public async Task<IEnumerable<InventoryDto>> Handle(
-            GetInventory request,
-            CancellationToken cancellationToken)
+        private readonly IGenericRepository<InventoryItem> _repository;
+        
+        public GetInventoryHandler(IGenericRepository<InventoryItem> repository)
         {
-            var list = await _repo.Query()
-                                  .AsNoTracking()
-                                  .ToListAsync(cancellationToken);
-
-            return list
-                .Select(i => new InventoryDto(i.ProductId, i.Quantity));
+            _repository = repository;
+        }
+        
+        public async Task<InventoryDto> Handle(GetInventory request, CancellationToken cancellationToken)
+        {
+            var item = await _repository.Query()
+                                        .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
+            
+            if (item == null)
+                throw new KeyNotFoundException($"Inventory with id {request.Id} not found");
+                
+            return new InventoryDto
+            {
+                Id = item.Id,
+                ProductId = item.ProductId,
+                Stock = item.Stock,
+                LastUpdated = item.LastUpdated
+            };
         }
     }
 }

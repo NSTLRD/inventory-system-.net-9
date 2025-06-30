@@ -15,7 +15,6 @@ namespace Inventory.Api.Domain.Entities
             Stock = initialStock;
         }
 
-        // Constructor para EF Core
         private Inventory() { }
     }
 }

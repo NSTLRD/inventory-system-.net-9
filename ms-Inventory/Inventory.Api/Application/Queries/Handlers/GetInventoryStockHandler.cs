@@ -1,18 +1,17 @@
-// Inventory.Api/Application/Handlers/Queries/GetInventoryStockHandler.cs
+
 
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Inventory.Api.Application.Queries;
-using Inventory.Api.Common.DTOs;
 using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Domain.Entities;
+using Inventory.Api.Application.Queries;
+using Inventory.Api.Application.DTOs;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Api.Application.Queries.Handlers
 {
-    public class GetInventoryStockHandler
-        : IRequestHandler<GetInventoryStock, InventoryStockDto>
+    public class GetInventoryStockHandler : IRequestHandler<GetInventoryStock, InventoryStockDto>
     {
         private readonly IGenericRepository<InventoryItem> _repo;
 
@@ -25,15 +24,12 @@ namespace Inventory.Api.Application.Queries.Handlers
             GetInventoryStock request,
             CancellationToken cancellationToken)
         {
-            // 1) Intentamos leer el item
             var item = await _repo.Query()
-                                  .AsNoTracking()
                                   .FirstOrDefaultAsync(
                                      i => i.ProductId == request.ProductId,
                                      cancellationToken);
 
-            // 2) Si no existe, devolvemos stock = 0
-            var stock = item?.Quantity ?? 0;
+            var stock = item?.Stock ?? 0;
 
             return new InventoryStockDto(request.ProductId, stock);
         }

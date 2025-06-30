@@ -1,4 +1,4 @@
-// Inventory.Api/Infrastructure/Messaging/KafkaConsumer.cs
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace Inventory.Api.Infrastructure.Messaging
         private Task? _executingTask;
         private CancellationTokenSource? _stoppingCts;
 
-        // Diccionario para mapear el nombre del evento a su tipo
+        // Diccionario para mapear el nombre del evento
         private static readonly Dictionary<string, Type> _eventTypes = new()
         {
             { "ProductCreatedEvent", typeof(ProductCreatedIntegrationEvent) },
@@ -40,7 +40,6 @@ namespace Inventory.Api.Infrastructure.Messaging
             { "ProductDeletedEvent", typeof(ProductDeletedIntegrationEvent) }
         };
 
-        // En el constructor, inicializar el mediator
         public KafkaConsumer(
             IConfiguration configuration,
             IMediator mediator,
@@ -80,17 +79,16 @@ namespace Inventory.Api.Infrastructure.Messaging
 
             try
             {
-                // Signal cancellation to the executing method
+
                 _stoppingCts?.Cancel();
             }
             finally
             {
-                // Wait until the task completes or the stop token triggers
                 await Task.WhenAny(_executingTask, Task.Delay(5000, cancellationToken));
             }
         }
 
-        // Este es un método privado, no una implementación de la interfaz
+       
         private async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Kafka consumer is running");
@@ -98,30 +96,93 @@ namespace Inventory.Api.Infrastructure.Messaging
 
             var config = new ConsumerConfig
             {
-                BootstrapServers = _configuration["Kafka:BootstrapServers"],
-                GroupId = "inventory-group",
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                BootstrapServers = _configuration["KafkaSettings:BootstrapServers"],
+                GroupId = _configuration["KafkaSettings:GroupId"],
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = true,
+                MaxPollIntervalMs = 300000,        // 5 minutos
+                SessionTimeoutMs = 30000,          // 30 segundos
+                HeartbeatIntervalMs = 10000,       // 10 segundos
+                EnablePartitionEof = true,         // Recibir EndOfPartition
+                EnableAutoOffsetStore = false      
             };
 
-            using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
+            using var consumer = new ConsumerBuilder<Ignore, string>(config)
+                .SetErrorHandler((_, e) => 
+                    _logger.LogWarning("Error de Kafka Consumer: {Reason} ({Code})", e.Reason, e.Code))
+                .SetPartitionsAssignedHandler((c, partitions) => 
+                    _logger.LogInformation("Asignadas particiones: {Partitions}", 
+                        string.Join(", ", partitions.Select(p => p.Partition.Value))))
+                .Build();
             
             try
             {
-                consumer.Subscribe(new[] { "product-events" });
+                // Suscribirse específicamente al topic de producto
+                var topicToConsume = _configuration["KafkaSettings:ConsumerTopic"] ?? "product-events";
+                _logger.LogInformation("Intentando suscribirse al tema {Topic}", topicToConsume);
+                
+                try 
+                {
+                    consumer.Subscribe(topicToConsume);
+                    _logger.LogInformation("Suscripción exitosa al tema {Topic}", topicToConsume);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al suscribirse al tema {Topic}. Intentando continuar...", topicToConsume);
+                }
 
+                int consecutiveErrors = 0;
+                
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     try
                     {
-                        var consumeResult = consumer.Consume(stoppingToken);
-                        if (consumeResult != null && !string.IsNullOrWhiteSpace(consumeResult.Message.Value))
+                        var consumeResult = consumer.Consume(TimeSpan.FromSeconds(5));
+                        
+                        if (consumeResult == null || consumeResult.IsPartitionEOF)
                         {
+                            continue;
+                        }
+                        
+                        if (!string.IsNullOrWhiteSpace(consumeResult.Message.Value))
+                        {
+                            _logger.LogInformation("Mensaje recibido: Partition: {Partition}, Offset: {Offset}, Timestamp: {Timestamp}",
+                                consumeResult.Partition, consumeResult.Offset, consumeResult.Message.Timestamp);
+                                
                             await ProcessMessageAsync(consumeResult.Message.Value);
+                            
+                            // Almacenar el offset manualmente
+                            consumer.StoreOffset(consumeResult);
+                            
+                            // Resetear contador de errores consecutivos
+                            consecutiveErrors = 0;
                         }
                     }
                     catch (ConsumeException ex)
                     {
-                        _logger.LogError(ex, "Error consuming message");
+                        consecutiveErrors++;
+                        _logger.LogError(ex, "Error consumiendo mensaje (intento {Count}): {Error}", 
+                            consecutiveErrors, ex.Error.Reason);
+                            
+                        if (consecutiveErrors > 5)
+                        {
+                            _logger.LogWarning("Demasiados errores consecutivos, esperando 10 segundos...");
+                            await Task.Delay(10000, stoppingToken);
+                            
+                            // Reintentar suscripción
+                            try 
+                            {
+                                consumer.Unsubscribe();
+                                await Task.Delay(1000, stoppingToken);
+                                consumer.Subscribe(topicToConsume);
+                                _logger.LogInformation("Re-suscripción exitosa al tema {Topic}", topicToConsume);
+                                consecutiveErrors = 0;
+                            }
+                            catch (Exception subEx)
+                            {
+                                _logger.LogError(subEx, "Error al re-suscribirse al tema {Topic}", topicToConsume);
+                            }
+                        }
                     }
                 }
             }
@@ -146,12 +207,42 @@ namespace Inventory.Api.Infrastructure.Messaging
             try
             {
                 _logger.LogInformation("Processing message: {Message}", message);
-                // Resto del método de procesamiento...
+                
+                // Deserializar el mensaje para determinar el tipo de evento
+                using var doc = JsonDocument.Parse(message);
+                
+                // Intenta determinar el tipo de evento basado en el contenido
+                Type? eventType = null;
+                foreach (var kvp in _eventTypes)
+                {
+                    if (message.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        eventType = kvp.Value;
+                        break;
+                    }
+                }
+                
+                if (eventType != null)
+                {
+                    // Deserializa el mensaje al tipo de evento específico
+                    var @event = JsonSerializer.Deserialize(message, eventType, _jsonOptions);
+                    if (@event != null)
+                    {
+                        _logger.LogInformation("Publicando evento al bus interno: {EventType}", eventType.Name);
+                        await _mediator.Send(@event);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("No se pudo determinar el tipo de evento para el mensaje: {Message}", message);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message");
             }
         }
+
+        public bool IsRunning => _isRunning;
     }
 }

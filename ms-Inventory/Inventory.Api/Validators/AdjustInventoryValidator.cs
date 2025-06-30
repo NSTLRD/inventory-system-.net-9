@@ -9,7 +9,6 @@ namespace Inventory.Api.Validators
         {
             RuleFor(x => x.ProductId).NotEmpty().WithMessage("ProductId is required");
             RuleFor(x => x.Quantity).GreaterThanOrEqualTo(0).WithMessage("Quantity cannot be negative");
-            // Otras reglas según sea necesario
         }
     }
 }

@@ -1,4 +1,4 @@
-// Products.api/Common/Exceptions/NotFoundException.cs
+
 using System;
 
 namespace Products.Api.Common.Exceptions

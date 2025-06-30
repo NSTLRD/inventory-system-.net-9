@@ -10,7 +10,7 @@ namespace Products.Api.Infrastruture.Data
     {
         public ProductDbContext CreateDbContext(string[] args)
         {
-            // Leemos la misma appsettings.json que en tiempo de ejecución
+            
             IConfigurationRoot config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")

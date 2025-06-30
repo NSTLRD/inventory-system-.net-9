@@ -1,4 +1,4 @@
-// Products.Api/Application/Handlers/CreateProductHandler.cs
+
 using MediatR;
 using Products.Api.Application.Commands;
 using Products.Api.Common.Interfaces;
@@ -33,7 +33,7 @@ namespace Products.Api.Application.Handlers
             await _uow.Repository<Product>().AddAsync(product);
             await _uow.SaveChangesAsync(ct);
 
-            // aquí envío el stock inicial:
+            //stock inicial:
             var evt = new ProductCreatedEvent(
                 id,
                 product.Name,

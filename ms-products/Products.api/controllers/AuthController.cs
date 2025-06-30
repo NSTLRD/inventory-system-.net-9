@@ -30,7 +30,7 @@ namespace Products.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
-            // Ensure role exists
+          
             if (!await _roleManager.RoleExistsAsync(dto.Role))
                 await _roleManager.CreateAsync(new IdentityRole(dto.Role));
 

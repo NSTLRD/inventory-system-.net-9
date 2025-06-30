@@ -1,65 +1,77 @@
-// Inventory.Api/Infrastructure/Messaging/KafkaEventBus.cs
+
 using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using Inventory.Api.Common.Interfaces;
 using Microsoft.Extensions.Options;
-using Inventory.Api.Application.Events;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 using Inventory.Api.Infrastructure.Configuration;
-using System.Collections.Concurrent;
-using Inventory.Api.Application.Events.Common;
 
 namespace Inventory.Api.Infrastructure.Messaging
 {
-    public class KafkaEventBus : IDisposable
+    public class KafkaEventBus : Inventory.Api.Common.Interfaces.IEventBus
     {
-        private readonly IProducer<Null, string> _producer;
-        private readonly KafkaSettings _settings;
-        private readonly ConcurrentDictionary<Guid, bool> _processedEvents = new();
+        private readonly IProducer<string, string> _producer;
+        private readonly KafkaSettings _kafkaConfig;
+        private readonly IServiceProvider _serviceProvider;
+        private static readonly Dictionary<string, List<Type>> _eventHandlers = new();
 
-        public KafkaEventBus(IOptions<KafkaSettings> opts)
+        public KafkaEventBus(
+            IOptions<KafkaSettings> kafkaOptions, 
+            IServiceProvider serviceProvider)
         {
-            _settings = opts.Value;
-            var prodConfig = new ProducerConfig {
-                BootstrapServers = _settings.BootstrapServers
-            };
-            _producer = new ProducerBuilder<Null, string>(prodConfig).Build();
-        }
+            _kafkaConfig = kafkaOptions.Value;
+            _serviceProvider = serviceProvider;
 
-        public Task PublishAsync<TEvent>(
-            TEvent @event,
-            CancellationToken cancellationToken
-        ) where TEvent : IntegrationEvent
-        {
-            if (_processedEvents.ContainsKey(@event.Id))
+            var config = new ProducerConfig
             {
-                // Ya se procesó este evento, no lo publicamos nuevamente
-                return Task.CompletedTask;
-            }
+                BootstrapServers = _kafkaConfig.BootstrapServers,
+                Acks = Acks.All,
+                EnableIdempotence = true
+            };
 
-            _processedEvents[@event.Id] = true;
-
-            var json = JsonSerializer.Serialize(@event);
-            var tcs  = new TaskCompletionSource<bool>();
-
-            _producer.Produce(
-                _settings.Topic,
-                new Message<Null, string> { Value = json },
-                r =>
-                {
-                    if (r.Error.IsError) tcs.SetException(new Exception(r.Error.Reason));
-                    else                 tcs.SetResult(true);
-                }
-            );
-
-            return tcs.Task;
+            _producer = new ProducerBuilder<string, string>(config).Build();
         }
 
-        public void Dispose()
+        public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default) 
+            where TEvent : class
         {
-            _producer.Flush();
-            _producer.Dispose();
+            var eventName = @event.GetType().Name;
+            var topic = $"{_kafkaConfig.TopicPrefix ?? "product"}.{eventName}";
+            var key = Guid.NewGuid().ToString();
+            var value = JsonSerializer.Serialize(@event);
+            
+            var message = new Message<string, string>
+            {
+                Key = key,
+                Value = value
+            };
+
+            await _producer.ProduceAsync(topic, message, cancellationToken);
+        }
+
+        public void Subscribe<TEvent, THandler>()
+            where TEvent : class
+            where THandler : IEventHandler<TEvent>
+        {
+            var eventName = typeof(TEvent).Name;
+            
+            if (!_eventHandlers.ContainsKey(eventName))
+            {
+                _eventHandlers[eventName] = new List<Type>();
+            }
+            
+            if (_eventHandlers[eventName].Contains(typeof(THandler)))
+            {
+                throw new ArgumentException(
+                    $"El handler {typeof(THandler).Name} ya está registrado para el evento {eventName}");
+            }
+            
+            _eventHandlers[eventName].Add(typeof(THandler));
         }
     }
+
 }

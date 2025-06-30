@@ -8,13 +8,11 @@ namespace Products.Api.Application.Queries
     {
         public string Category { get; set; } = string.Empty;
 
-        // Constructor con categoría
         public GetProductsByCategory(string category)
         {
             Category = category;
         }
 
-        // Constructor sin parámetros para deserialización
         public GetProductsByCategory() { }
     }
 }

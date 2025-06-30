@@ -1,4 +1,4 @@
-// Inventory.Api/Application/Events/ProductUpdatedEvent.cs
+
 using System;
 using Inventory.Api.Application.Events.Common;
 

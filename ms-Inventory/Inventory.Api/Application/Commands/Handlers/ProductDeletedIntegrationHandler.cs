@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Inventory.Api.Application.Common.Interfaces;
+using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Application.Events;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +26,6 @@ namespace Inventory.Api.Application.Commands.Handlers
             var inventory = await _inventoryRepository.GetByProductIdAsync(@event.ProductId);
             if (inventory != null)
             {
-                // Corregido: Pasar el objeto inventory, no solo el ProductId
                 await _inventoryRepository.DeleteAsync(inventory);
                 await _inventoryRepository.SaveChangesAsync();
                 _logger.LogInformation("Inventory for product {ProductId} has been deleted", @event.ProductId);

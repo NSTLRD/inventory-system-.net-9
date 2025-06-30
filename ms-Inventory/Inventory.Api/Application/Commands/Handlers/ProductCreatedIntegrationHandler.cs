@@ -1,7 +1,7 @@
-// Inventory.Api/Application/IntegrationHandlers/ProductCreatedIntegrationHandler.cs
+
 using System;
 using System.Threading.Tasks;
-using Inventory.Api.Application.Common.Interfaces;
+using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Application.Events;
 using Inventory.Api.Domain.Entities;
 using Microsoft.Extensions.Logging;

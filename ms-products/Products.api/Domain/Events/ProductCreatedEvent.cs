@@ -1,4 +1,4 @@
-// Products.Api/Domain/Events/ProductCreatedEvent.cs
+
 using System;
 using Products.Api.Infrastructure.Messaging;
 

@@ -1,4 +1,4 @@
-// Products.Api/Application/Handlers/UpdateProductHandler.cs
+
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -29,7 +29,6 @@ namespace Products.Api.Application.Handlers
                 return;
             }
 
-            // CORRECCIÓN: Usar el método de actualización que hemos creado
             product.Update(
                 request.Name,
                 request.Description,

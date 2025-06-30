@@ -1,4 +1,4 @@
-// Products.Api/Infrastructure/Data/ProductDbContext.cs
+
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Products.Api.Common.Interfaces;
 using Products.Api.Domain.Entities;
 using Products.Api.Domain.ValueObjects;
-using Products.Api.Infrastruture.Repositories;  // ← Aquí importas EfRepository<>
+using Products.Api.Infrastruture.Repositories;
 
 namespace Products.Api.Infrastruture.Data
 {
@@ -48,7 +48,6 @@ namespace Products.Api.Infrastruture.Data
                  .IsRequired();
                 b.Property(p => p.SKU).IsRequired();
 
-                // Convertir PriceHistory a JSONB en Postgres
                 var historyConverter = new ValueConverter<PriceHistory, string>(
                     v => JsonSerializer.Serialize(v, new JsonSerializerOptions()),
                     v => JsonSerializer.Deserialize<PriceHistory>(

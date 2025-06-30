@@ -1,4 +1,4 @@
-// Inventory.Api/Application/DTOs/AdjustInventoryDto.cs
+
 namespace Inventory.Api.Application.DTOs
 {
     public class AdjustInventoryDto

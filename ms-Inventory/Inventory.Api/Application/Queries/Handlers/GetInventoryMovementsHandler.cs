@@ -1,15 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Inventory.Api.Application.Queries;
-using Inventory.Api.Common.DTOs;
 using Inventory.Api.Common.Interfaces;
 using Inventory.Api.Domain.Entities;
+using Inventory.Api.Application.DTOs;
 
-namespace Inventory.Api.Application.Handlers.Queries
+namespace Inventory.Api.Application.Queries.Handlers
 {
     public class GetInventoryMovementsHandler
         : IRequestHandler<GetInventoryMovements, IEnumerable<MovementDto>>
@@ -31,9 +31,9 @@ namespace Inventory.Api.Application.Handlers.Queries
                 .SelectMany(i => i.Movements.Select(m =>
                     new MovementDto(
                         m.Id,
-                        m.InventoryItemId,   // antes m.ProductId
+                        m.InventoryItemId,
                         m.QuantityChange,
-                        m.Timestamp          // antes m.When
+                        m.Timestamp
                     )
                 ));
         }

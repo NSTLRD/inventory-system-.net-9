@@ -4,7 +4,7 @@ using Products.Api.Domain.Entities;
 
 namespace Products.Api.Application.Queries
 {
-    // CORRECCIÓN: Implementar la interfaz IRequest con el tipo correcto
+    
     public class GetAllProducts : IRequest<PaginatedResult<Product>>
     {
         public int PageNumber { get; set; } = 1;

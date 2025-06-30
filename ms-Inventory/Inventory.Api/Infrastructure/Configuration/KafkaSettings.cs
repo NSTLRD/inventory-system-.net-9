@@ -1,10 +1,10 @@
 namespace Inventory.Api.Infrastructure.Configuration
 {
-   public class KafkaSettings
-{
-    public required string BootstrapServers { get; set; }
-    public required string Topic            { get; set; }
-    public required string GroupId          { get; set; }
-}
-
+    public class KafkaSettings
+    {
+        public string BootstrapServers { get; set; } = string.Empty;
+        public string TopicPrefix { get; set; } = string.Empty;
+        public string ConsumerTopic { get; set; } = string.Empty;
+        public string GroupId { get; set; } = string.Empty;
+    }
 }

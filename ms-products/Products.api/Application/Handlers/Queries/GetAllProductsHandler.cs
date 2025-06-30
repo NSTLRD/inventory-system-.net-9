@@ -29,7 +29,6 @@ namespace Products.Api.Application.Handlers.Queries
                 ? allProducts.Where(p => p.Category == request.Category)
                 : allProducts;
 
-            // Paginación en memoria
             var count = filteredProducts.Count();
             var pageSize = request.PageSize;
             var pageNumber = request.PageNumber;

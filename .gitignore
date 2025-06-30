@@ -1,0 +1,94 @@
+# .NET Core/.NET build output
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Rider
+.idea/
+*.sln.iml
+
+# Archivos de compilación
+# Asegurar que absolutamente todos los .dll no se incluyan
+**/*.dll
+*.exe
+*.pdb
+*.dll.config
+*.cache
+*.tmp
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUNIT
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Coverage tools
+coverage.*
+*.opencover.xml
+*.coverage
+.nyc_output/
+
+# Archivos generados por Entity Framework
+Migrations/*.Designer.cs
+
+# Archivos temporales del sistema
+*.swp
+*.swo
+*~
+thumbs.db
+desktop.ini
+*.log
+
+# Carpeta de paquetes NuGet
+packages/
+
+# Carpetas generadas por herramientas
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Archivos específicos de macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# NO ignorar el archivo .env - lo necesitamos en el repo
+!.env
+
+# Archivos de logs de aplicaciones
+logs/
+*.log
+npm-debug.log*
+
+# Coverage reports
+coverage-reports/products/json/
+coverage-reports/inventory/json/
+coverage-reports/combined/json/
+# No ignorar los reportes HTML de cobertura
+!coverage-reports/products/html/
+!coverage-reports/inventory/html/
+!coverage-reports/combined/html/
+
+# Archivos temporales de docker
+.docker/
+
+# Otros archivos específicos
+*.pubxml
+*.pubxml.user
+*.pfx
+*.snk

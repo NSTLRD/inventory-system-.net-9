@@ -1,52 +1,98 @@
-// Inventory.Api/Application/Commands/Handlers/AdjustInventoryHandler.cs
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Inventory.Api.Common.Interfaces;
+using Inventory.Api.Domain.Entities;
+using Inventory.Api.Application.Events;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Inventory.Api.Application.Commands;
-using Inventory.Api.Application.Common.Interfaces;
 
 namespace Inventory.Api.Application.Commands.Handlers
 {
-    public class AdjustInventoryHandler
-        : IRequestHandler<AdjustInventory, Unit>
+    public class AdjustInventoryHandler : IRequestHandler<AdjustInventory, Unit>
     {
-        private readonly IInventoryRepository _repository;
+        private readonly IInventoryRepository _repo;
         private readonly ILogger<AdjustInventoryHandler> _logger;
+        
+        private readonly IMediator _mediator;
 
         public AdjustInventoryHandler(
-            IInventoryRepository repository,
-            ILogger<AdjustInventoryHandler> logger)
+            IInventoryRepository repo,
+            ILogger<AdjustInventoryHandler> logger,
+            IMediator mediator) 
         {
-            _repository = repository;
-            _logger     = logger;
+            _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
-        public async Task<Unit> Handle(
-            AdjustInventory request,
-            CancellationToken cancellationToken)
+        public async Task<Unit> Handle(AdjustInventory request, CancellationToken ct)
         {
-            var inventory = await _repository
-                .GetByProductIdAsync(request.ProductId);
-
-            if (inventory is null)
-            {
-                _logger.LogWarning(
-                  "Inventory item for product {ProductId} not found",
-                  request.ProductId);
-                return Unit.Value;
-            }
-
-            inventory.SetStock(request.Quantity, request.Reason);
-
-            await _repository.UpdateAsync(inventory);
-            await _repository.SaveChangesAsync();
-
-            _logger.LogInformation(
-              "Inventory adjusted for product {ProductId}. New stock: {Stock}",
-              request.ProductId, request.Quantity);
-
+            
+            await ExecuteAdjustmentAsync(request, ct);
             return Unit.Value;
+        }
+
+        private async Task ExecuteAdjustmentAsync(AdjustInventory request, CancellationToken ct)
+        {
+            try
+            {
+               
+                InventoryItem? item; 
+                
+                string reason = string.IsNullOrWhiteSpace(request.Reason)
+                            ? "Ajuste sin motivo"
+                            : request.Reason;
+
+                item = await _repo.GetByProductIdAsync(request.ProductId);
+                
+                if (item == null)
+                {
+                    _logger.LogInformation("Creando nuevo inventario para producto {ProductId}", request.ProductId);
+                    item = new InventoryItem(request.ProductId, initialStock: request.Quantity);
+                    
+                    await _repo.AddAsync(item);
+                    
+                    await _repo.SaveChangesAsync();
+                }
+                else
+                {
+                    
+                    var previousStock = item.Stock;
+                    var change = request.Quantity - previousStock;
+                    
+                    item.UpdateStockDirectly(request.Quantity);
+                    
+                    var movement = InventoryMovement.Create(
+                        item.Id,
+                        change,
+                        reason
+                    );
+                    
+                    await _repo.AddMovementAsync(movement);
+                    
+                    await _repo.SaveChangesAsync();
+                }
+                
+                await _mediator.Publish(new InventoryAdjustedEvent(
+                    item.Id,
+                    item.ProductId,
+                    item.Stock,
+                    reason,
+                    DateTime.UtcNow
+                ), ct);
+                
+                _logger.LogInformation(
+                    "Inventario ajustado → Producto={ProductId}, NuevoStock={Stock}",
+                    request.ProductId, item.Stock
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ajustar inventario para producto {ProductId}", request.ProductId);
+                throw;
+            }
         }
     }
 }

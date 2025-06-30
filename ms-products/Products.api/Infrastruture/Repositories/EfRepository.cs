@@ -22,7 +22,6 @@ namespace Products.Api.Infrastruture.Repositories
 
         public async Task<T> GetByIdAsync(Guid id)
         {
-            // FindAsync es el método más eficiente para buscar por clave primaria
             return await _dbSet.FindAsync(id);
         }
 
@@ -43,13 +42,11 @@ namespace Products.Api.Infrastruture.Repositories
 
         public void UpdateAsync(T entity)
         {
-            // EF Core rastrea los cambios, solo necesitamos marcar la entidad como modificada
             _dbContext.Entry(entity).State = EntityState.Modified;
         }
 
         public void DeleteAsync(T entity)
         {
-            // EF Core rastrea los cambios, solo necesitamos marcar la entidad para ser eliminada
             _dbSet.Remove(entity);
         }
     }
