@@ -254,6 +254,10 @@ Una vez desplegado, puedes acceder a los servicios en:
 
 Para más detalles sobre el despliegue local y en la nube, consulte [DEPLOYMENT.md](DEPLOYMENT.md).
 
+# API COLLECTION
+
+Postman [https://api.postman.com/collections/21929770-fcb0785a-f05a-4840-afac-0cbf7634fb75?access_key=PMAT-01JZ1P4Q0ZFAJNF06W74G44R59]
+
 ## Estructura del Código
 
 Cada microservicio sigue una arquitectura limpia (Clean Architecture) con las siguientes capas:
