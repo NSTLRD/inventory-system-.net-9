@@ -1,9 +1,17 @@
 # Stage 1: build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+
+# Copiar solo el proyecto principal (sin tests)
 COPY ["ms-Inventory.csproj", "./"]
+COPY ["Inventory.Api", "./Inventory.Api/"]
+COPY ["Inventory.Interfaces", "./Inventory.Interfaces/"]
+COPY ["Program.cs", "./"]
+COPY ["appsettings.json", "./"]
+COPY ["appsettings.Development.json", "./"]
+
+# Restaurar dependencias y publicar
 RUN dotnet restore "ms-Inventory.csproj"
-COPY . .
 RUN dotnet publish "ms-Inventory.csproj" -c Release -o /app/publish
 
 # Stage 2: runtime

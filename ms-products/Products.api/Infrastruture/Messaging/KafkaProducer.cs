@@ -102,10 +102,9 @@ namespace Products.Api.Infrastructure.Messaging
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo crear el topic {TopicName} automáticamente: {Error}", 
+                _logger.LogWarning(ex, "No se pudo crear el topic {TopicName} automáticamente: {Error}. Continuando sin crear el topic.", 
                     topicName, ex.Message);
-                
-                TryCreateTopicWithKafkaScript(bootstrapServers, topicName);
+                // La creación del topic fallida se manejará en tiempo de ejecución si es necesario
             }
         }
         

@@ -1,0 +1,20 @@
+# Ignorar directorios de pruebas
+**/Inventory.Tests/
+**/Inventory.Tests.Controllers/
+**/Tests/
+
+# Archivos compilados
+**/bin/
+**/obj/
+
+# Archivos de desarrollo
+**/*.user
+**/*.userosscache
+**/*.suo
+.vs/
+.vscode/
+
+# Archivos de git y otros
+.git/
+.gitignore
+README.md

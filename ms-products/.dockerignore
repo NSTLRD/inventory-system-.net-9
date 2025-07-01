@@ -1,0 +1,20 @@
+# Ignorar directorios de pruebas
+**/NewTest/
+**/Tests/
+**/*.Tests/
+
+# Archivos compilados
+**/bin/
+**/obj/
+
+# Archivos de desarrollo
+**/*.user
+**/*.userosscache
+**/*.suo
+.vs/
+.vscode/
+
+# Archivos de git y otros
+.git/
+.gitignore
+README.md

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MediatR;
-using Inventory.Api.Domain.Interfaces;
+using Inventory.Api.Common.Interfaces;
 
 namespace Inventory.Api.Domain.Entities
 {

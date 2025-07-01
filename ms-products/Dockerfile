@@ -2,12 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# copy the project file and restore
+# Copiar solo el proyecto principal (sin tests)
 COPY ["ms-products.csproj", "./"]
-RUN dotnet restore "ms-products.csproj"
+COPY ["Products.api", "./Products.api/"]
+COPY ["Products.Interfaces", "./Products.Interfaces/"]
+COPY ["Program.cs", "./"]
+COPY ["appsettings.json", "./"]
+COPY ["appsettings.Development.json", "./"]
+COPY ["Migrations", "./Migrations/"]
 
-# copy everything else and build
-COPY . .
+# Restaurar dependencias y publicar
+RUN dotnet restore "ms-products.csproj" 
 RUN dotnet publish "ms-products.csproj" -c Release -o /app/publish
 
 # Stage 2: runtime
