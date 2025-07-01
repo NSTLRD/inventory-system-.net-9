@@ -257,15 +257,15 @@ Para más detalles sobre el despliegue local y en la nube, consulte [DEPLOYMENT.
 
 # Postman Api Collection
 
-El proyecto incluye una colección de Postman completa (`postman-api-collection.json`) que contiene todos los endpoints disponibles en ambos microservicios. Puedes importar esta colección directamente en Postman para probar fácilmente las APIs:
+El proyecto incluye una colección de Postman (`postman-api-collection.json`) con los endpoints de los microservicios. Para usar esta colección:
 
 1. Abre Postman y selecciona "Import" en el menú superior
-2. Arrastra el archivo `postman-api-collection.json` o navega hasta él
-3. Una vez importada, encontrarás carpetas para cada microservicio con sus respectivos endpoints
-4. La colección incluye ejemplos de solicitudes para todas las operaciones (crear productos, ajustar inventario, etc.)
-5. Las variables de entorno para las URLs base y tokens ya están preconfiguradas
+2. Importa el archivo `postman-api-collection.json` desde la raíz del proyecto
+3. Verás carpetas organizadas por microservicio con todos los endpoints disponibles
+4. Encontrarás ejemplos preconfigurados para cada operación
+5. **Importante**: Deberás configurar tus propias variables de entorno para URLs y credenciales
 
-Esta colección es especialmente útil para desarrolladores que quieren entender rápidamente las capacidades de la API sin tener que leer toda la documentación.
+La colección facilita el testing y exploración de las APIs sin necesidad de revisar toda la documentación.
 
 
 ## Estructura del Código
