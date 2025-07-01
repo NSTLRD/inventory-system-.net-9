@@ -254,9 +254,19 @@ Una vez desplegado, puedes acceder a los servicios en:
 
 Para más detalles sobre el despliegue local y en la nube, consulte [DEPLOYMENT.md](DEPLOYMENT.md).
 
-# API COLLECTION
 
-Postman [https://api.postman.com/collections/21929770-fcb0785a-f05a-4840-afac-0cbf7634fb75?access_key=PMAT-01JZ1P4Q0ZFAJNF06W74G44R59]
+# Postman Api Collection
+
+El proyecto incluye una colección de Postman completa (`postman-api-collection.json`) que contiene todos los endpoints disponibles en ambos microservicios. Puedes importar esta colección directamente en Postman para probar fácilmente las APIs:
+
+1. Abre Postman y selecciona "Import" en el menú superior
+2. Arrastra el archivo `postman-api-collection.json` o navega hasta él
+3. Una vez importada, encontrarás carpetas para cada microservicio con sus respectivos endpoints
+4. La colección incluye ejemplos de solicitudes para todas las operaciones (crear productos, ajustar inventario, etc.)
+5. Las variables de entorno para las URLs base y tokens ya están preconfiguradas
+
+Esta colección es especialmente útil para desarrolladores que quieren entender rápidamente las capacidades de la API sin tener que leer toda la documentación.
+
 
 ## Estructura del Código
 
